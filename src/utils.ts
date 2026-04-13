@@ -35,10 +35,11 @@ export const SNAKE_GREENS = [
 ] as const;
 
 // Claude logo block art — the sparkle/starburst every user sees on startup
+// Each line padded to equal width (10 chars) so they align properly
 export const CLAUDE_LOGO = [
-  '▐▛███▜▌',
+  ' ▐▛███▜▌  ',
   '▝▜█████▛▘',
-  '  ▘▘ ▝▝',
+  '  ▘▘ ▝▝  ',
 ];
 
 // Running animation frames
@@ -138,9 +139,9 @@ export function getRecessSummary(): string {
   const elapsed = formatRecessTime(getRecessElapsed());
   const { game, score } = getLastGame();
   if (game) {
-    return `recess over — you played for ${elapsed} (${game}: ${score} pts)`;
+    return `game over — you played for ${elapsed} (${game}: ${score} pts)`;
   }
-  return `recess over — ${elapsed}`;
+  return `game over — ${elapsed}`;
 }
 
 // ─── Session Achievements ─────────────────────────────────────────────

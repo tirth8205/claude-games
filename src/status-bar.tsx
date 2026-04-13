@@ -106,7 +106,7 @@ export const StatusBar: React.FC = () => {
           {display.text}
         </Text>
         <Text color={COLORS.border}>{'  ║  '}</Text>
-        <Text color={COLORS.textSecondary}>recess: </Text>
+        <Text color={COLORS.textSecondary}>playing: </Text>
         <Text color={COLORS.textPrimary}>{elapsed}</Text>
         <Text color={COLORS.border}>{'  ║  '}</Text>
         <Text color={COLORS.textMuted}>esc to return</Text>
