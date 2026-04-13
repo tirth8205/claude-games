@@ -8,7 +8,7 @@ Set FontSize 32
 Set Width 3840
 Set Height 2160
 Set Padding 60
-Set Framerate 60
+Set Framerate 24
 
 Type@100ms "node dist/cli.js"
 Enter
