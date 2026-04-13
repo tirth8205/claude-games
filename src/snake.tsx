@@ -19,6 +19,7 @@ import {
 } from './utils.js';
 import { StatusBar } from './status-bar.js';
 import { readAgentState } from './status-bridge.js';
+import { isDemoMode } from './utils.js';
 
 type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 type Point = { x: number; y: number };
@@ -146,9 +147,27 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onExit }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Place food at a random empty cell
+  // Place food — in demo mode, place near the snake head for a good recording
   const placeFood = useCallback((currentSnake: Point[], cols: number, rows: number): Point => {
     const occupied = new Set(currentSnake.map(p => `${p.x},${p.y}`));
+
+    if (isDemoMode()) {
+      // Place food 3-5 cells ahead of the head in a reachable spot
+      const head = currentSnake[0];
+      const offsets = [
+        { x: 3, y: 0 }, { x: 4, y: 1 }, { x: 2, y: 2 },
+        { x: 5, y: 0 }, { x: 3, y: 3 }, { x: 0, y: 3 },
+        { x: -3, y: 2 }, { x: 4, y: -1 }, { x: 2, y: -2 },
+      ];
+      for (const off of offsets) {
+        const pos = {
+          x: (head.x + off.x + cols) % cols,
+          y: (head.y + off.y + rows) % rows,
+        };
+        if (!occupied.has(`${pos.x},${pos.y}`)) return pos;
+      }
+    }
+
     const empty: Point[] = [];
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {

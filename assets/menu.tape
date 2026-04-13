@@ -27,14 +27,6 @@ Sleep 3s
 Left
 Sleep 3s
 
-# Launch Runner briefly to show transition
-Enter
-Sleep 3s
-
-# Quit back to menu
-Type "q"
-Sleep 3s
-
 # Quit
 Type "q"
 Sleep 2s

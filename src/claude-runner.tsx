@@ -17,6 +17,7 @@ import {
 } from './utils.js';
 import { StatusBar } from './status-bar.js';
 import { readAgentState } from './status-bridge.js';
+import { isDemoMode } from './utils.js';
 
 type GameState = 'waiting' | 'playing' | 'paused' | 'gameover';
 
@@ -303,12 +304,20 @@ export const ClaudeRunnerGame: React.FC<ClaudeRunnerProps> = ({ onExit }) => {
       .map(o => ({ ...o, x: o.x - moveAmount }))
       .filter(o => o.x > -10);
 
-    // Spawn obstacles — tighter gaps, more frequent at higher speed
+    // Spawn obstacles
     const ticksSinceLast = count - lastObstacleRef.current;
-    const minGap = Math.max(12, 28 - Math.floor(speed * 5));
-    if (ticksSinceLast > minGap && Math.random() < 0.07 * speed) {
-      movedObs.push(createObstacle());
-      lastObstacleRef.current = count;
+    if (isDemoMode()) {
+      // Demo mode: spawn every 25 ticks for predictable GIF recording
+      if (ticksSinceLast >= 25) {
+        movedObs.push(createObstacle());
+        lastObstacleRef.current = count;
+      }
+    } else {
+      const minGap = Math.max(12, 28 - Math.floor(speed * 5));
+      if (ticksSinceLast > minGap && Math.random() < 0.07 * speed) {
+        movedObs.push(createObstacle());
+        lastObstacleRef.current = count;
+      }
     }
 
     // Collision detection (forgiving hitboxes)

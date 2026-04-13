@@ -1,4 +1,4 @@
-# claude-games Claude Runner demo
+# claude-games Runner demo (deterministic with --demo)
 # Run: vhs assets/runner.tape
 
 Output assets/runner.gif
@@ -11,46 +11,50 @@ Set Padding 40
 Set Framerate 15
 Set TypingSpeed 80ms
 
-# Launch and go to Runner
-Type "node dist/cli.js"
+# Launch in demo mode — obstacles spawn every 25 ticks (~1.25s)
+Type "node dist/cli.js --demo"
 Enter
 Sleep 3s
 Enter
 Sleep 2s
 
-# Start
+# Start running
+Space
+Sleep 1s
+
+# First obstacle arrives ~1.25s — jump
 Space
 Sleep 1.5s
 
-# Jump
+# Second obstacle — jump
 Space
-Sleep 1.2s
+Sleep 1.5s
 
-# Another jump
-Sleep 800ms
+# Third — jump
 Space
-Sleep 1.2s
+Sleep 1.5s
 
-# Duck
+# Fourth — duck (might be aerial)
 Down
-Sleep 1s
+Sleep 1.5s
 
-# Jump
+# Fifth — jump
 Space
-Sleep 1.2s
-Space
-Sleep 1s
+Sleep 1.5s
 
-# Duck
+# Sixth — jump
+Space
+Sleep 1.5s
+
+# Seventh — duck
 Down
-Sleep 800ms
+Sleep 1.5s
 
-# More jumping
-Sleep 800ms
+# Keep going
 Space
-Sleep 1.2s
+Sleep 1.5s
 Space
-Sleep 1.2s
+Sleep 1.5s
 
 # Show pause
 Type "p"
@@ -61,14 +65,12 @@ Type "p"
 Sleep 1s
 
 Space
-Sleep 1.2s
+Sleep 1.5s
 Space
-Sleep 1s
-
-# Let it play
-Sleep 2s
+Sleep 1.5s
 
 # Quit
+Sleep 1s
 Type "q"
 Sleep 2s
 Type "q"

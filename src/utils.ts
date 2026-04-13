@@ -88,6 +88,30 @@ export function formatScore(score: number, pad: number = 5): string {
   return String(score).padStart(pad, '0');
 }
 
+// ─── Demo Mode ────────────────────────────────────────────────────────
+// When --demo is passed, override Math.random with a seeded PRNG
+// so games are deterministic for GIF recording.
+
+let demoMode = false;
+
+export function isDemoMode(): boolean {
+  return demoMode;
+}
+
+export function enableDemoMode(): void {
+  demoMode = true;
+  // Simple seeded PRNG (mulberry32)
+  let seed = 42;
+  const origRandom = Math.random;
+  Math.random = () => {
+    seed |= 0;
+    seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 // Clamp a value between min and max
 export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));

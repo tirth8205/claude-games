@@ -7,8 +7,15 @@
 
 import { launchGames } from './index.js';
 import { getHookCommands, STATUS_FILE } from './status-bridge.js';
+import { enableDemoMode } from './utils.js';
 
-const command = process.argv[2];
+const args = process.argv.slice(2);
+const command = args[0];
+
+// --demo flag: seed randomness for deterministic GIF recording
+if (args.includes('--demo')) {
+  enableDemoMode();
+}
 
 if (command === 'setup') {
   // Print the hook configuration users need to add to Claude Code
