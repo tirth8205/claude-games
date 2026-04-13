@@ -2,3 +2,5 @@ node_modules/
 dist/
 .DS_Store
 record.sh
+assets/social.gif
+assets/social.tape
