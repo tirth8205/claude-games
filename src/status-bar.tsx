@@ -4,7 +4,7 @@
 // Flashes achievements when they unlock.
 // Shows urgent alerts when Claude is done or needs input.
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Text } from 'ink';
 import {
   COLORS,
@@ -33,7 +33,27 @@ export const StatusBar: React.FC = () => {
     message: 'claude is working...',
     timestamp: Date.now(),
   });
-  const termSize = getTerminalSize();
+  const [termSize, setTermSize] = useState(getTerminalSize);
+
+  // E-9: Mounted-ref guard — prevent state updates after unmount
+  const mountedRef = useRef<boolean>(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // E-13: Terminal resize / tmux support — keep termSize in sync
+  useEffect(() => {
+    const onResize = () => {
+      setTermSize(getTerminalSize());
+    };
+    process.stdout.on('resize', onResize);
+    return () => {
+      process.stdout.off('resize', onResize);
+    };
+  }, []);
 
   // Pulse the status dot
   useEffect(() => {
@@ -53,7 +73,9 @@ export const StatusBar: React.FC = () => {
   useEffect(() => {
     const interval = setInterval(async () => {
       const state = await readAgentState();
-      setAgentState(state);
+      if (mountedRef.current) {
+        setAgentState(state);
+      }
     }, 1000);
     return () => clearInterval(interval);
   }, []);

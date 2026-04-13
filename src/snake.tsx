@@ -4,7 +4,7 @@
 // Food is the mini Claude logo in terracotta.
 // Achievements: "First bite" (first food), "Snaked it" (length 10), "Commit streak" (5 without turning).
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
 import {
   COLORS,
@@ -22,7 +22,7 @@ import { readAgentState } from './status-bridge.js';
 
 type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 type Point = { x: number; y: number };
-type GameState = 'waiting' | 'playing' | 'paused' | 'gameover';
+type GameState = 'waiting' | 'playing' | 'paused' | 'gameover' | 'won';
 
 const GAME_NAME = 'snake';
 
@@ -53,20 +53,36 @@ const BODY_CHAR = '██';
 // Tail tapers off
 const TAIL_CHAR = '░░';
 
+/** Compute grid dimensions from terminal size */
+function computeGridDims(termCols: number, termRows: number) {
+  return {
+    gridCols: Math.min(40, Math.floor((termCols - 4) / 2)),
+    gridRows: Math.min(20, Math.floor((termRows - 14) / 1)),
+  };
+}
+
 interface SnakeGameProps {
   onExit: () => void;
 }
 
 export const SnakeGame: React.FC<SnakeGameProps> = ({ onExit }) => {
   const termSize = getTerminalSize();
+  const initialDims = computeGridDims(termSize.cols, termSize.rows);
 
-  // 2-char cells, no gap — fits more grid
-  const gridCols = Math.min(40, Math.floor((termSize.cols - 4) / 2));
-  const gridRows = Math.min(20, Math.floor((termSize.rows - 14) / 1));
+  // M-4: Store grid dimensions in state so they can update on terminal resize
+  const [gridCols, setGridCols] = useState(initialDims.gridCols);
+  const [gridRows, setGridRows] = useState(initialDims.gridRows);
 
-  // Game state
+  // E-9: Mounted ref guard — prevent setState calls after unmount in async callbacks
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  // Game state (E-1: added 'won')
   const [state, setState] = useState<GameState>('waiting');
-  const [snake, setSnake] = useState<Point[]>([{ x: Math.floor(gridCols / 2), y: Math.floor(gridRows / 2) }]);
+  const [snake, setSnake] = useState<Point[]>([{ x: Math.floor(initialDims.gridCols / 2), y: Math.floor(initialDims.gridRows / 2) }]);
   const [food, setFood] = useState<Point>({ x: 0, y: 0 });
   const [direction, setDirection] = useState<Direction>('RIGHT');
   const [score, setScore] = useState(0);
@@ -79,6 +95,8 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onExit }) => {
   const scoreRef = useRef(0);
   const speedRef = useRef(150);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const gridColsRef = useRef(gridCols);
+  const gridRowsRef = useRef(gridRows);
 
   // Achievement tracking
   const streakRef = useRef(0);
@@ -89,6 +107,38 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onExit }) => {
   useEffect(() => { stateRef.current = state; }, [state]);
   useEffect(() => { scoreRef.current = score; }, [score]);
   useEffect(() => { speedRef.current = speed; }, [speed]);
+  useEffect(() => { gridColsRef.current = gridCols; }, [gridCols]);
+  useEffect(() => { gridRowsRef.current = gridRows; }, [gridRows]);
+
+  // M-4: Terminal resize handling — update grid dimensions and clamp snake positions
+  useEffect(() => {
+    const onResize = () => {
+      if (!mountedRef.current) return;
+      const size = getTerminalSize();
+      const { gridCols: newCols, gridRows: newRows } = computeGridDims(size.cols, size.rows);
+      setGridCols(newCols);
+      setGridRows(newRows);
+
+      // Clamp snake positions to fit inside the new grid
+      setSnake(prev =>
+        prev.map(p => ({
+          x: Math.min(p.x, newCols - 1),
+          y: Math.min(p.y, newRows - 1),
+        }))
+      );
+
+      // Clamp food position too
+      setFood(prev => ({
+        x: Math.min(prev.x, newCols - 1),
+        y: Math.min(prev.y, newRows - 1),
+      }));
+    };
+
+    process.stdout.on('resize', onResize);
+    return () => {
+      process.stdout.off('resize', onResize);
+    };
+  }, []);
 
   // Food pulse animation — blinks between bright and normal terracotta
   useEffect(() => {
@@ -97,24 +147,26 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onExit }) => {
   }, []);
 
   // Place food at a random empty cell
-  const placeFood = useCallback((currentSnake: Point[]): Point => {
+  const placeFood = useCallback((currentSnake: Point[], cols: number, rows: number): Point => {
     const occupied = new Set(currentSnake.map(p => `${p.x},${p.y}`));
     const empty: Point[] = [];
-    for (let y = 0; y < gridRows; y++) {
-      for (let x = 0; x < gridCols; x++) {
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
         if (!occupied.has(`${x},${y}`)) {
           empty.push({ x, y });
         }
       }
     }
-    if (empty.length === 0) return { x: 0, y: 0 };
+    if (empty.length === 0) return { x: -1, y: -1 };
     return empty[Math.floor(Math.random() * empty.length)];
-  }, [gridCols, gridRows]);
+  }, []);
 
   // Initialize food
+  // Deps are intentionally limited to run only on mount — placeFood and snake
+  // are read from their initial values; subsequent food placement happens in tick().
   useEffect(() => {
-    setFood(placeFood(snake));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    setFood(placeFood(snake, gridCols, gridRows));
+  }, []); // L-6: Intentionally run only on mount; see comment above
 
   // Game tick
   const tick = useCallback(() => {
@@ -125,11 +177,13 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onExit }) => {
     const dir = dirRef.current;
     const vel = VELOCITY[dir];
     const head = currentSnake[0];
+    const cols = gridColsRef.current;
+    const rows = gridRowsRef.current;
 
     // Wrap around edges
     const newHead: Point = {
-      x: (head.x + vel.x + gridCols) % gridCols,
-      y: (head.y + vel.y + gridRows) % gridRows,
+      x: (head.x + vel.x + cols) % cols,
+      y: (head.y + vel.y + rows) % rows,
     };
 
     // Self collision
@@ -147,7 +201,17 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onExit }) => {
       const newScore = scoreRef.current + 1;
       setScore(newScore);
       setLastGame('snake', newScore);
-      setFood(placeFood(newSnake));
+
+      // E-1: Check win condition — if no empty cells remain, player wins
+      const newFood = placeFood(newSnake, cols, rows);
+      if (newFood.x === -1 && newFood.y === -1) {
+        // Snake fills the entire grid — victory!
+        setSnake(newSnake);
+        updateHighScore(GAME_NAME, newScore);
+        setState('won');
+        return;
+      }
+      setFood(newFood);
 
       if (newScore % 5 === 0) {
         setSpeed(s => Math.max(60, s - 10));
@@ -168,7 +232,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onExit }) => {
     }
 
     setSnake(newSnake);
-  }, [gridCols, gridRows, placeFood]);
+  }, [placeFood]);
 
   // Game loop — stops when paused
   useEffect(() => {
@@ -191,10 +255,13 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onExit }) => {
   }, [state, speed, tick]);
 
   // Auto-pause when Claude finishes or needs input
+  // E-9: Guard setState calls with mountedRef
   useEffect(() => {
     const interval = setInterval(async () => {
+      if (!mountedRef.current) return;
       if (stateRef.current !== 'playing') return;
       const agentState = await readAgentState();
+      if (!mountedRef.current) return;
       if (agentState.status === 'done' || agentState.status === 'waiting_for_input') {
         setState('paused');
       }
@@ -243,11 +310,12 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onExit }) => {
       return;
     }
 
-    if (state === 'gameover') {
+    // E-1: Handle restart from both gameover and won states
+    if (state === 'gameover' || state === 'won') {
       if (input === ' ') {
         const startSnake = [{ x: Math.floor(gridCols / 2), y: Math.floor(gridRows / 2) }];
         setSnake(startSnake);
-        setFood(placeFood(startSnake));
+        setFood(placeFood(startSnake, gridCols, gridRows));
         dirRef.current = 'RIGHT';
         setDirection('RIGHT');
         setScore(0);
@@ -283,9 +351,20 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onExit }) => {
     return (x + y) % 2 === 0 ? COLORS.surface : '#1a2030';
   };
 
+  // L-9: O(1) snake rendering — build a lookup map once per render
+  // Maps "x,y" -> index in the snake array, so renderCell avoids O(n) findIndex
+  const snakeLookup = useMemo(() => {
+    const map = new Map<string, number>();
+    for (let i = 0; i < snake.length; i++) {
+      map.set(`${snake[i].x},${snake[i].y}`, i);
+    }
+    return map;
+  }, [snake]);
+
   // Render a single cell
   const renderCell = (x: number, y: number): React.ReactElement => {
-    const snakeIndex = snake.findIndex(p => p.x === x && p.y === y);
+    // L-9: O(1) lookup instead of snake.findIndex()
+    const snakeIndex = snakeLookup.get(`${x},${y}`) ?? -1;
     const isFood = food.x === x && food.y === y;
 
     // Snake head — directional arrow character
@@ -350,15 +429,19 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onExit }) => {
 
   const highScore = getHighScore(GAME_NAME);
 
+  // E-7: Handle score display overflow — use dynamic padding width for large scores
+  const scorePad = Math.max(5, String(score).length);
+  const highPad = Math.max(5, String(highScore).length);
+
   return (
     <Box flexDirection="column" alignItems="center">
       {/* Header */}
       <Box marginBottom={1} flexDirection="row" justifyContent="center">
         <Text color={COLORS.textSecondary} bold>SNAKE</Text>
         <Text color={COLORS.textMuted}>  </Text>
-        <Text color={COLORS.terracotta}>Score: {formatScore(score)}</Text>
+        <Text color={COLORS.terracotta}>Score: {formatScore(score, scorePad)}</Text>
         <Text color={COLORS.textMuted}>  </Text>
-        <Text color={COLORS.textSecondary}>Best: {formatScore(highScore)}</Text>
+        <Text color={COLORS.textSecondary}>Best: {formatScore(highScore, highPad)}</Text>
       </Box>
 
       {/* Grid — rounded border */}
@@ -401,6 +484,13 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onExit }) => {
           <Box flexDirection="column" alignItems="center">
             <Text color={COLORS.errorRed} bold>Game Over!</Text>
             <Text color={COLORS.textSecondary}>Score: {score} contributions</Text>
+            <Text color={COLORS.textMuted}>Press SPACE to restart · Q to quit</Text>
+          </Box>
+        )}
+        {state === 'won' && (
+          <Box flexDirection="column" alignItems="center">
+            <Text color={COLORS.successGreen} bold>You Win! Perfect Game!</Text>
+            <Text color={COLORS.textSecondary}>Score: {score} contributions — the grid is full!</Text>
             <Text color={COLORS.textMuted}>Press SPACE to restart · Q to quit</Text>
           </Box>
         )}

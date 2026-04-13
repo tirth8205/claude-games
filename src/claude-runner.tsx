@@ -2,8 +2,8 @@
 // The character is the exact Claude Code startup logo in terracotta.
 // Achievements: "Centurion" (score 100), "Speed demon" (survive past 200).
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Box, Text, useInput } from 'ink';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Box, Text, useInput, useStdin } from 'ink';
 import {
   COLORS,
   RUNNER_FRAMES,
@@ -28,6 +28,7 @@ const JUMP_VELOCITY = -3; // Tuned so max height ≈ 9 rows (stays inside the fr
 const MAX_JUMP_Y = 10;    // Hard clamp — never exceed GROUND_Y - CHAR_HEIGHT
 const CHAR_HEIGHT = 3;
 const DUCK_HEIGHT = 2;
+const MAX_SPEED = 2.8;    // E-10: asymptotic speed cap
 
 // Obstacle types — real terminal / dev artifacts you'd recognize in a terminal session
 type ObstacleType = 'segfault' | 'npm_err' | 'stack' | 'git_conflict' | 'panic' | 'null' | 'error_banner' | 'pipe';
@@ -51,9 +52,18 @@ interface ClaudeRunnerProps {
   onExit: () => void;
 }
 
+// E-7: Score display helper — handles scores > 99999 gracefully
+function displayScore(score: number): string {
+  if (score > 99999) return String(score);
+  return formatScore(score);
+}
+
 export const ClaudeRunnerGame: React.FC<ClaudeRunnerProps> = ({ onExit }) => {
-  const termSize = getTerminalSize();
-  const playWidth = Math.min(termSize.cols - 2, 100);
+  // M-4: Store playWidth in state so it updates on terminal resize
+  const [playWidth, setPlayWidth] = useState(() => {
+    const termSize = getTerminalSize();
+    return Math.min(termSize.cols - 2, 100);
+  });
 
   const [state, setState] = useState<GameState>('waiting');
   const [score, setScore] = useState(0);
@@ -78,6 +88,8 @@ export const ClaudeRunnerGame: React.FC<ClaudeRunnerProps> = ({ onExit }) => {
   const tickCountRef = useRef(0);
   const lastObstacleRef = useRef(0);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // E-9: Mounted ref guard for async callbacks
+  const mountedRef = useRef(true);
 
   useEffect(() => { stateRef.current = state; }, [state]);
   useEffect(() => { scoreRef.current = score; }, [score]);
@@ -89,10 +101,26 @@ export const ClaudeRunnerGame: React.FC<ClaudeRunnerProps> = ({ onExit }) => {
   useEffect(() => { cloudsRef.current = clouds; }, [clouds]);
   useEffect(() => { gameSpeedRef.current = gameSpeed; }, [gameSpeed]);
 
-  // Pool of terminal-themed obstacles — compact enough to jump over.
-  // Max widths: height 2 → 8 chars, height 3 → 6 chars.
-  // Every obstacle should be clearable with a well-timed jump.
-  const obstaclePool: Array<() => Obstacle> = [
+  // E-9: Track mount/unmount for async safety
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  // M-4: Listen for terminal resize events and update playWidth
+  useEffect(() => {
+    const handleResize = () => {
+      const termSize = getTerminalSize();
+      setPlayWidth(Math.min(termSize.cols - 2, 100));
+    };
+    process.stdout.on('resize', handleResize);
+    return () => {
+      process.stdout.off('resize', handleResize);
+    };
+  }, []);
+
+  // L-10 / E-12: Memoize obstacle pool — only recreated when playWidth changes
+  const obstaclePool = useMemo<Array<() => Obstacle>>(() => [
     // ── Ground obstacles (jump over) ──────────────────────────
 
     // Segfault — compact box
@@ -101,10 +129,10 @@ export const ClaudeRunnerGame: React.FC<ClaudeRunnerProps> = ({ onExit }) => {
       char: ['┌────┐', '│ 11 │'],
       color: COLORS.errorRed,
     }),
-    // npm ERR!
+    // npm ERR! — M-5: width corrected to 6 to match widest line ('ERR! █' = 6 chars)
     () => ({
-      x: playWidth, width: 5, height: 2, type: 'npm_err' as ObstacleType,
-      char: ['npm █', 'ERR! █'],
+      x: playWidth, width: 6, height: 2, type: 'npm_err' as ObstacleType,
+      char: ['npm █ ', 'ERR! █'],
       color: COLORS.errorRed,
     }),
     // Stack trace — short fragment
@@ -125,13 +153,14 @@ export const ClaudeRunnerGame: React.FC<ClaudeRunnerProps> = ({ onExit }) => {
       char: ['panic! ', '██████ '],
       color: COLORS.errorRed,
     }),
-    // null / NaN / void — tiny
+    // null / NaN / void — M-5: width corrected to 6 to match visual '│' + 4char + '│' = 6
+    // Also fixed top border to match: '┌────┐' = 6 chars
     () => {
       const vals = ['null', ' NaN', 'void'];
       const v = vals[Math.floor(Math.random() * vals.length)];
       return {
-        x: playWidth, width: 4, height: 2, type: 'null' as ObstacleType,
-        char: ['┌──┐', '│' + v + '│'],
+        x: playWidth, width: 6, height: 2, type: 'null' as ObstacleType,
+        char: ['┌────┐', '│' + v + '│'],
         color: COLORS.textMuted,
       };
     },
@@ -180,12 +209,12 @@ export const ClaudeRunnerGame: React.FC<ClaudeRunnerProps> = ({ onExit }) => {
       char: ['▌ 403▐'],
       color: COLORS.errorRed,
     }),
-  ];
+  ], [playWidth]);
 
   const createObstacle = useCallback((): Obstacle => {
     const factory = obstaclePool[Math.floor(Math.random() * obstaclePool.length)];
     return factory();
-  }, [playWidth]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [obstaclePool]);
 
   // Main game tick
   const tick = useCallback(() => {
@@ -204,11 +233,43 @@ export const ClaudeRunnerGame: React.FC<ClaudeRunnerProps> = ({ onExit }) => {
       if (newScore === 100) unlockAchievement('centurion');
       if (newScore === 200) unlockAchievement('speed_demon');
 
-      // Speed milestone every 100 points
+      // Hidden easter eggs at special score numbers
+      const EASTER_EGGS: Record<number, string> = {
+        404: 'score not found',
+        418: "i'm a teapot",
+        500: 'internal server error',
+        502: 'bad gateway',
+        666: 'the devil ships to prod on fridays',
+        777: 'jackpot! no bugs here',
+        1000: '▜▛ LEGENDARY',
+        1024: '1 KB of pure skill',
+        1337: 'h4x0r',
+        1500: 'you should be reviewing that PR',
+        2000: '▜▛ are you even working?',
+        2048: 'wrong game',
+        3000: 'claude finished ages ago',
+        8080: 'localhost vibes',
+        9001: "it's over 9000!",
+      };
+
+      const egg = EASTER_EGGS[newScore];
+      if (egg) {
+        setMilestone(egg);
+        setTimeout(() => {
+          if (mountedRef.current) setMilestone('');
+        }, 2500);
+      }
+
+      // Speed up every 100 points
       if (newScore > 0 && newScore % 100 === 0) {
-        setMilestone('▜▛ nice!');
-        setTimeout(() => setMilestone(''), 1500);
-        setGameSpeed(Math.min(3, gameSpeedRef.current + 0.15));
+        if (!egg) {
+          setMilestone('▜▛ nice!');
+          setTimeout(() => {
+            if (mountedRef.current) setMilestone('');
+          }, 1500);
+        }
+        // E-10: Asymptotic speed curve — approaches MAX_SPEED but never reaches it
+        setGameSpeed(1.2 + (MAX_SPEED - 1.2) * (1 - Math.exp(-newScore / 800)));
       }
     }
 
@@ -338,10 +399,13 @@ export const ClaudeRunnerGame: React.FC<ClaudeRunnerProps> = ({ onExit }) => {
   }, [state, tick]);
 
   // Auto-pause when Claude finishes or needs input
+  // E-9: Check mountedRef before calling setState in async callback
   useEffect(() => {
     const interval = setInterval(async () => {
+      if (!mountedRef.current) return;
       if (stateRef.current !== 'playing') return;
       const agentState = await readAgentState();
+      if (!mountedRef.current) return;
       if (agentState.status === 'done' || agentState.status === 'waiting_for_input') {
         setState('paused');
       }
@@ -412,16 +476,22 @@ export const ClaudeRunnerGame: React.FC<ClaudeRunnerProps> = ({ onExit }) => {
     } else if (key.downArrow) {
       if (playerYRef.current <= 0) {
         setIsDucking(true);
+        lastDownRef.current = Date.now(); // reset hold timer on each repeat
       }
     }
   });
 
-  // Release duck after brief hold
+  // Duck stays active while down arrow is held — release on any other key or no input
+  // We track the last time down was pressed; if no repeat within 120ms, release
+  const lastDownRef = useRef(0);
   useEffect(() => {
-    if (isDucking && state === 'playing') {
-      const t = setTimeout(() => setIsDucking(false), 300);
-      return () => clearTimeout(t);
-    }
+    if (!isDucking || state !== 'playing') return;
+    const check = setInterval(() => {
+      if (Date.now() - lastDownRef.current > 120) {
+        setIsDucking(false);
+      }
+    }, 60);
+    return () => clearInterval(check);
   }, [isDucking, state]);
 
   // Build the scene as a character grid
@@ -512,9 +582,10 @@ export const ClaudeRunnerGame: React.FC<ClaudeRunnerProps> = ({ onExit }) => {
           ) : null}
         </Box>
         <Box>
-          <Text color={COLORS.terracotta}>{formatScore(score)}</Text>
+          {/* E-7: Use displayScore to handle scores > 99999 gracefully */}
+          <Text color={COLORS.terracotta}>{displayScore(score)}</Text>
           <Text color={COLORS.textMuted}>  HI </Text>
-          <Text color={COLORS.textSecondary}>{formatScore(Math.max(highScore, score))}</Text>
+          <Text color={COLORS.textSecondary}>{displayScore(Math.max(highScore, score))}</Text>
         </Box>
       </Box>
 
@@ -537,7 +608,7 @@ export const ClaudeRunnerGame: React.FC<ClaudeRunnerProps> = ({ onExit }) => {
         {state === 'gameover' && (
           <Box flexDirection="column" alignItems="center">
             <Text color={COLORS.errorRed} bold>Game Over!</Text>
-            <Text color={COLORS.textSecondary}>Score: {formatScore(score)}</Text>
+            <Text color={COLORS.textSecondary}>Score: {displayScore(score)}</Text>
             <Text color={COLORS.textMuted}>Press SPACE to restart · Q to quit</Text>
           </Box>
         )}

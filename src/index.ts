@@ -16,6 +16,11 @@ registerCleanup();
  * Initializes the status bridge file so hooks can write to it.
  */
 export async function launchRecess(): Promise<void> {
+  if (!process.stdout.isTTY) {
+    console.error('claude-games requires an interactive terminal. Cannot run in a pipe or redirected output.');
+    process.exit(1);
+  }
+
   startRecessTimer();
   await initStatusFile();
 
@@ -25,7 +30,7 @@ export async function launchRecess(): Promise<void> {
   };
 
   // handleExit is async but onExit expects sync — wrap it
-  const onExit = () => { handleExit(); };
+  const onExit = () => { handleExit().catch(() => {}); };
 
   const app = React.createElement(Menu, { onExit });
   enterAlternateScreen(app);
