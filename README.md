@@ -43,12 +43,13 @@ npm install -g .
 claude-games
 ```
 
-### Use with npx (no install)
+### Use with npx (once published to npm)
 
 ```bash
-# Once published to npm:
 npx claude-games
 ```
+
+> **Note:** `npx` usage requires the package to be published to npm first. For now, use the clone + build approach above.
 
 ### How to use alongside Claude Code
 

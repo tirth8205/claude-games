@@ -68,10 +68,9 @@ const MenuScreen: React.FC<MenuScreenProps> = ({ selected, onSelect, onLaunch, o
       <Box flexDirection="column" alignItems="center" marginBottom={1}>
         <Box flexDirection="row" alignItems="center">
           <Box flexDirection="column" marginRight={2} alignItems="center">
-            {CLAUDE_LOGO.map((line, i) => {
-              const gradient = [COLORS.terracottaLight, COLORS.terracotta, COLORS.terracottaDark];
-              return <Text key={i} color={gradient[i]} bold>{line}</Text>;
-            })}
+            {CLAUDE_LOGO.map((line, i) => (
+              <Text key={i} color={COLORS.terracotta} bold>{line}</Text>
+            ))}
           </Box>
           <Box flexDirection="column">
             <Text color={COLORS.textPrimary} bold>claude-games</Text>

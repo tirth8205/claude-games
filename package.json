@@ -20,10 +20,9 @@
     "games",
     "terminal",
     "snake",
-    "runner",
-    "games"
+    "runner"
   ],
-  "author": "",
+  "author": "Tirth Kanani",
   "license": "MIT",
   "type": "module",
   "dependencies": {
