@@ -4,10 +4,11 @@
 Output assets/snake.gif
 
 Set Theme "GitHub Dark"
-Set FontSize 14
-Set Width 900
-Set Height 600
-Set Padding 20
+Set FontSize 32
+Set Width 3840
+Set Height 2160
+Set Padding 60
+Set Framerate 60
 
 Type@100ms "node dist/cli.js"
 Enter
