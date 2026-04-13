@@ -1,4 +1,4 @@
-// Shared utilities: colors, scoring, achievements, recess timer
+// Shared utilities: colors, scoring, achievements, game timer
 
 // Claude brand colors
 export const COLORS = {
@@ -101,22 +101,22 @@ export function getTerminalSize(): { cols: number; rows: number } {
   };
 }
 
-// ─── Recess Timer ─────────────────────────────────────────────────────
+// ─── Game Timer ──────────────────────────────────────────────────────
 
-let recessStartTime: number = 0;
+let gameStartTime: number = 0;
 let lastGamePlayed: string = '';
 let lastGameScore: number = 0;
 
-export function startRecessTimer(): void {
-  recessStartTime = Date.now();
+export function startGameTimer(): void {
+  gameStartTime = Date.now();
 }
 
-export function getRecessElapsed(): number {
-  if (recessStartTime === 0) return 0;
-  return Date.now() - recessStartTime;
+export function getGameElapsed(): number {
+  if (gameStartTime === 0) return 0;
+  return Date.now() - gameStartTime;
 }
 
-export function formatRecessTime(ms: number): string {
+export function formatGameTime(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
@@ -135,8 +135,8 @@ export function getLastGame(): { game: string; score: number } {
   return { game: lastGamePlayed, score: lastGameScore };
 }
 
-export function getRecessSummary(): string {
-  const elapsed = formatRecessTime(getRecessElapsed());
+export function getGameSummary(): string {
+  const elapsed = formatGameTime(getGameElapsed());
   const { game, score } = getLastGame();
   if (game) {
     return `game over — you played for ${elapsed} (${game}: ${score} pts)`;

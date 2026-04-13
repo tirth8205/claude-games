@@ -5,7 +5,7 @@
 //   claude-games          Launch the games
 //   claude-games setup    Print hook configuration for Claude Code
 
-import { launchRecess } from './index.js';
+import { launchGames } from './index.js';
 import { getHookCommands, STATUS_FILE } from './status-bridge.js';
 
 const command = process.argv[2];
@@ -60,5 +60,5 @@ Same JSON as above.
 just shows a generic "working" message instead of live updates.\x1b[0m
 `);
 } else {
-  launchRecess();
+  launchGames();
 }

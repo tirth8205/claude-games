@@ -1,11 +1,11 @@
 // claude-games — library entry point
-// Exports launchRecess() for programmatic use.
+// Exports launchGames() for programmatic use.
 // For CLI usage, see cli.ts.
 
 import React from 'react';
 import { enterAlternateScreen, exitAlternateScreen, registerCleanup } from './renderer.js';
 import { Menu } from './menu.js';
-import { startRecessTimer } from './utils.js';
+import { startGameTimer } from './utils.js';
 import { initStatusFile, cleanupStatusFile } from './status-bridge.js';
 
 // Register cleanup handlers to restore terminal state on unexpected exit
@@ -15,13 +15,13 @@ registerCleanup();
  * Launch the game selection menu in an alternate screen buffer.
  * Initializes the status bridge file so hooks can write to it.
  */
-export async function launchRecess(): Promise<void> {
+export async function launchGames(): Promise<void> {
   if (!process.stdout.isTTY) {
     console.error('claude-games requires an interactive terminal. Cannot run in a pipe or redirected output.');
     process.exit(1);
   }
 
-  startRecessTimer();
+  startGameTimer();
   await initStatusFile();
 
   const handleExit = async () => {
@@ -36,4 +36,4 @@ export async function launchRecess(): Promise<void> {
   enterAlternateScreen(app);
 }
 
-export default launchRecess;
+export default launchGames;

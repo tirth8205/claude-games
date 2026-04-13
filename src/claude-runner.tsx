@@ -3,7 +3,7 @@
 // Achievements: "Centurion" (score 100), "Speed demon" (survive past 200).
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Box, Text, useInput, useStdin } from 'ink';
+import { Box, Text, useInput } from 'ink';
 import {
   COLORS,
   RUNNER_FRAMES,

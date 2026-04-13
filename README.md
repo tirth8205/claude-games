@@ -110,18 +110,18 @@ Every screen shows a persistent status bar:
 
 ```
 ─────────────────────────────────────────────────────────
-● claude is working...  ║  recess: 2m 14s  ║  esc to return
+● claude is working...  ║  playing: 2m 14s  ║  esc to return
 ─────────────────────────────────────────────────────────
 ```
 
-The green dot pulses like a heartbeat. The recess timer ticks up so you know exactly how long you've been playing.
+The green dot pulses like a heartbeat. The game timer ticks up so you know exactly how long you've been playing.
 
 ### Return Summary
 
 When you exit, you get a little receipt:
 
 ```
-☕ recess over — you played for 3m 42s (snake: 47 pts)
+☕ game over — you played for 3m 42s (snake: 47 pts)
 ```
 
 ### Session Achievements
@@ -180,7 +180,7 @@ Unlock fun milestones that flash briefly when achieved:
 claude-games/
 ├── src/
 │   ├── cli.ts               # CLI entry (claude-games / claude-games setup)
-│   ├── index.ts              # Library entry (launchRecess API)
+│   ├── index.ts              # Library entry (launchGames API)
 │   ├── renderer.ts           # Alternate screen buffer management
 │   ├── status-bridge.ts      # File-based IPC with Claude Code hooks
 │   ├── status-bar.tsx        # Live agent status bar component

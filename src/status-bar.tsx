@@ -8,8 +8,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Box, Text } from 'ink';
 import {
   COLORS,
-  getRecessElapsed,
-  formatRecessTime,
+  getGameElapsed,
+  formatGameTime,
   consumePendingAchievement,
   type Achievement,
   getTerminalSize,
@@ -64,7 +64,7 @@ export const StatusBar: React.FC = () => {
   // Update timer every second
   useEffect(() => {
     const interval = setInterval(() => {
-      setElapsed(formatRecessTime(getRecessElapsed()));
+      setElapsed(formatGameTime(getGameElapsed()));
     }, 1000);
     return () => clearInterval(interval);
   }, []);

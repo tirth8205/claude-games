@@ -6,7 +6,7 @@
 
 import * as React from 'react';
 import { render, type Instance } from 'ink';
-import { getRecessSummary } from './utils.js';
+import { getGameSummary } from './utils.js';
 
 // ANSI escape sequences for alternate screen buffer
 const ENTER_ALT_SCREEN = '\x1b[?1049h';
@@ -50,7 +50,7 @@ export function enterAlternateScreen(component: React.ReactElement): Instance {
 
 /**
  * Exit the alternate screen buffer and restore the main terminal.
- * If showSummary is true, flash the recess summary before restoring.
+ * If showSummary is true, flash the game summary before restoring.
  */
 export function exitAlternateScreen(showSummary: boolean = true): void {
   if (inkInstance) {
@@ -66,7 +66,7 @@ export function exitAlternateScreen(showSummary: boolean = true): void {
 
   // Flash return summary — the fun receipt moment
   if (showSummary) {
-    const summary = getRecessSummary();
+    const summary = getGameSummary();
     // Terracotta ANSI color (closest 256-color: 173)
     const terracotta = '\x1b[38;2;218;119;86m';
     const reset = '\x1b[0m';
