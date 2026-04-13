@@ -86,7 +86,7 @@ export const StatusBar: React.FC = () => {
       const a = consumePendingAchievement();
       if (a) {
         setAchievement(a);
-        setTimeout(() => setAchievement(null), 3000);
+        setTimeout(() => setAchievement(null), 5000);
       }
     }, 200);
     return () => clearInterval(interval);

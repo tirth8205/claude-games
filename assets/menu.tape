@@ -1,30 +1,40 @@
-# VHS tape for recording the claude-games menu screen
+# claude-games menu demo
 # Run: vhs assets/menu.tape
 
 Output assets/menu.gif
 
 Set Theme "GitHub Dark"
-Set FontSize 32
-Set Width 3840
-Set Height 2160
-Set Padding 60
-Set Framerate 24
+Set FontSize 20
+Set Width 1200
+Set Height 700
+Set Padding 40
+Set Framerate 15
+Set TypingSpeed 80ms
 
-Type@100ms "node dist/cli.js"
+# Launch
+Type "node dist/cli.js"
 Enter
-Sleep 2s
+Sleep 4s
 
-# Show menu for a moment
-Sleep 2s
+# Hover on Runner
+Sleep 3s
 
-# Move selection to Snake
+# Switch to Snake
 Right
-Sleep 1.5s
+Sleep 3s
 
-# Move back to Runner
+# Back to Runner
 Left
-Sleep 1.5s
+Sleep 3s
+
+# Launch Runner briefly to show transition
+Enter
+Sleep 3s
+
+# Quit back to menu
+Type "q"
+Sleep 3s
 
 # Quit
 Type "q"
-Sleep 1s
+Sleep 2s

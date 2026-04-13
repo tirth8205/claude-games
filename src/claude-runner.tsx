@@ -257,7 +257,7 @@ export const ClaudeRunnerGame: React.FC<ClaudeRunnerProps> = ({ onExit }) => {
         setMilestone(egg);
         setTimeout(() => {
           if (mountedRef.current) setMilestone('');
-        }, 2500);
+        }, 5000);
       }
 
       // Speed up every 100 points
@@ -266,7 +266,7 @@ export const ClaudeRunnerGame: React.FC<ClaudeRunnerProps> = ({ onExit }) => {
           setMilestone('▜▛ nice!');
           setTimeout(() => {
             if (mountedRef.current) setMilestone('');
-          }, 1500);
+          }, 4000);
         }
         // E-10: Asymptotic speed curve — approaches MAX_SPEED but never reaches it
         setGameSpeed(1.2 + (MAX_SPEED - 1.2) * (1 - Math.exp(-newScore / 800)));

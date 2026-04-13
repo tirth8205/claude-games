@@ -1,71 +1,75 @@
-# VHS tape for recording Claude Runner gameplay
+# claude-games Claude Runner demo
 # Run: vhs assets/runner.tape
 
 Output assets/runner.gif
 
 Set Theme "GitHub Dark"
-Set FontSize 32
-Set Width 3840
-Set Height 2160
-Set Padding 60
-Set Framerate 24
+Set FontSize 20
+Set Width 1200
+Set Height 800
+Set Padding 40
+Set Framerate 15
+Set TypingSpeed 80ms
 
-Type@100ms "node dist/cli.js"
+# Launch and go to Runner
+Type "node dist/cli.js"
 Enter
+Sleep 3s
+Enter
+Sleep 2s
+
+# Start
+Space
 Sleep 1.5s
 
-# Select Runner (press 1 or Enter since it's default)
-Enter
-Sleep 1s
-
-# Start with space
+# Jump
 Space
-Sleep 1s
+Sleep 1.2s
 
-# Jump over first obstacle
-Space
+# Another jump
 Sleep 800ms
-
-# Wait and jump again
-Sleep 600ms
 Space
-Sleep 800ms
+Sleep 1.2s
 
 # Duck
 Down
-Sleep 500ms
+Sleep 1s
+
+# Jump
+Space
+Sleep 1.2s
+Space
+Sleep 1s
+
+# Duck
+Down
+Sleep 800ms
 
 # More jumping
-Sleep 500ms
-Space
 Sleep 800ms
 Space
-Sleep 800ms
-
-# Duck again
-Down
-Sleep 400ms
-
-Sleep 500ms
+Sleep 1.2s
 Space
-Sleep 800ms
+Sleep 1.2s
 
-# Pause
+# Show pause
 Type "p"
-Sleep 2s
+Sleep 3s
 
 # Resume
 Type "p"
-Sleep 500ms
+Sleep 1s
 
 Space
-Sleep 800ms
+Sleep 1.2s
 Space
-Sleep 800ms
+Sleep 1s
 
-# Let it run until game over or quit
-Sleep 1s
+# Let it play
+Sleep 2s
+
+# Quit
 Type "q"
-Sleep 1s
+Sleep 2s
 Type "q"
-Sleep 1s
+Sleep 2s
