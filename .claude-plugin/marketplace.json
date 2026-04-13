@@ -1,0 +1,10 @@
+{
+  "name": "claude-games",
+  "plugins": [
+    {
+      "name": "claude-games",
+      "description": "Play Claude Runner and Snake while Claude codes. Your agent keeps working.",
+      "path": "."
+    }
+  ]
+}

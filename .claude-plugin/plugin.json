@@ -1,0 +1,9 @@
+{
+  "name": "claude-games",
+  "version": "1.0.0",
+  "description": "Play games in your terminal while Claude works. Claude Runner (dodge errors as the Claude logo) and Snake (GitHub contribution graph edition).",
+  "author": "",
+  "homepage": "https://github.com/tirth8205/claude-games",
+  "commands": ["games"],
+  "skills": ["games"]
+}

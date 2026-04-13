@@ -1,0 +1,41 @@
+{
+  "name": "claude-games",
+  "version": "1.0.0",
+  "description": "Play games in your terminal while Claude Code works on your tasks",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "claude-games": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/cli.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "plugin",
+    "games",
+    "terminal",
+    "snake",
+    "runner",
+    "games"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "ink": "^4.0.0",
+    "react": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/react": "^18.2.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
