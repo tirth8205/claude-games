@@ -3,7 +3,7 @@
 
 Output assets/menu.gif
 
-Set Theme "Catppuccin Mocha"
+Set Theme "GitHub Dark"
 Set FontSize 14
 Set Width 900
 Set Height 500
