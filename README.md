@@ -168,9 +168,11 @@ Unlock fun milestones that flash briefly when achieved:
 | Menu | `Enter` or `Space` | Launch game |
 | Menu | `Q` or `Esc` | Quit |
 | Runner | `Space` or `Up` | Jump |
-| Runner | `Down` | Duck |
+| Runner | `Down` (hold) | Duck |
+| Runner | `P` | Pause / Resume |
 | Runner | `Q` or `Esc` | Back to menu |
 | Snake | Arrow keys or `WASD` | Move |
+| Snake | `P` | Pause / Resume |
 | Snake | `Q` or `Esc` | Back to menu |
 | Game Over | `Space` | Restart |
 
@@ -180,7 +182,7 @@ Unlock fun milestones that flash briefly when achieved:
 claude-games/
 ├── src/
 │   ├── cli.ts               # CLI entry (claude-games / claude-games setup)
-│   ├── index.ts              # Library entry (launchGames API)
+│   ├── index.ts              # Library entry point
 │   ├── renderer.ts           # Alternate screen buffer management
 │   ├── status-bridge.ts      # File-based IPC with Claude Code hooks
 │   ├── status-bar.tsx        # Live agent status bar component
