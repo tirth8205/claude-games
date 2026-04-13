@@ -12,7 +12,7 @@ Set Framerate 15
 Set TypingSpeed 80ms
 
 # Launch in demo mode — food spawns near the snake head
-Type "node dist/cli.js --demo"
+Type "node dist/cli.js"
 Enter
 Sleep 3s
 

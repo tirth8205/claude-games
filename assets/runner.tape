@@ -12,7 +12,7 @@ Set Framerate 15
 Set TypingSpeed 80ms
 
 # Launch in demo mode — obstacles spawn every 25 ticks (~1.25s)
-Type "node dist/cli.js --demo"
+Type "node dist/cli.js"
 Enter
 Sleep 3s
 Enter
